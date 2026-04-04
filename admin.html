@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin - Pendaftaran OSIS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; min-height: 100vh; }
+    header {
+      background: #1a237e; color: #fff;
+      padding: 16px 30px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    header h1 { font-size: 18px; }
+    .container { padding: 30px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 16px; margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff; border-radius: 12px; padding: 20px;
+      text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .stat-card .num { font-size: 32px; font-weight: 700; color: #1a237e; }
+    .stat-card .lbl { font-size: 12px; color: #888; margin-top: 4px; }
+    .table-wrap {
+      background: #fff; border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;
+    }
+    .table-header {
+      padding: 16px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #eee; gap: 10px; flex-wrap: wrap;
+    }
+    .table-header h2 { font-size: 15px; color: #333; }
+    .table-header input {
+      padding: 7px 12px; border: 1.5px solid #ddd;
+      border-radius: 8px; font-size: 13px; outline: none; width: 200px;
+    }
+    .table-header input:focus { border-color: #1a237e; }
+    .btn-export {
+      padding: 8px 16px; background: #2e7d32; color: #fff;
+      border: none; border-radius: 8px; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: background 0.2s;
+    }
+    .btn-export:hover { background: #1b5e20; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: #f5f6fa; }
+    th { padding: 12px 16px; text-align: left; color: #555; font-weight: 600; }
+    td { padding: 12px 16px; border-top: 1px solid #f0f0f0; color: #333; }
+    tr:hover td { background: #fafafa; }
+    .badge {
+      display: inline-block; padding: 3px 10px;
+      border-radius: 20px; font-size: 11px; font-weight: 600;
+    }
+    .badge-l { background: #e3f2fd; color: #1565c0; }
+    .badge-p { background: #fce4ec; color: #c62828; }
+    .empty { text-align: center; padding: 40px; color: #aaa; font-size: 14px; }
+    .btn-hapus {
+      background: #ffebee; color: #c62828;
+      border: none; border-radius: 6px;
+      padding: 5px 10px; font-size: 12px;
+      cursor: pointer; transition: background 0.2s;
+    }
+    .btn-hapus:hover { background: #ffcdd2; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏫 Panel Admin OSIS</h1>
+    <span id="tglHari"></span>
+  </header>
+
+  <div class="container">
+    <div class="stats">
+      <div class="stat-card">
+        <div class="num" id="totalPendaftar">0</div>
+        <div class="lbl">Total Pendaftar</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="totalL">0</div>
+        <div class="lbl">Laki-laki</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="totalP">0</div>
+        <div class="lbl">Perempuan</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-header">
+        <h2>Data Pendaftar</h2>
+        <input type="text" id="search" placeholder="🔍 Cari nama..." oninput="filterData()" />
+        <button class="btn-export" onclick="exportExcel()">⬇ Export Excel</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nama</th>
+            <th>Kejuruan</th>
+            <th>Kelas</th>
+            <th>Jenis Kelamin</th>
+            <th>No. HP</th>
+            <th>Bidang</th>
+            <th>Motivasi</th>
+            <th>Tanggal Daftar</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let allData = [];
+
+    document.getElementById('tglHari').textContent = new Date().toLocaleDateString('id-ID', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+
+    function loadData() {
+      allData = JSON.parse(localStorage.getItem('osis_pendaftar') || '[]');
+      renderTable(allData);
+      updateStats(allData);
+    }
+
+    function updateStats(data) {
+      document.getElementById('totalPendaftar').textContent = data.length;
+      document.getElementById('totalL').textContent = data.filter(d => d.jenis_kelamin === 'Laki-laki').length;
+      document.getElementById('totalP').textContent = data.filter(d => d.jenis_kelamin === 'Perempuan').length;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('tableBody');
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="empty">Belum ada pendaftar.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map((d, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td>${d.nama}</td>
+          <td>${d.kejuruan}</td>
+          <td>${d.kelas}</td>
+          <td><span class="badge ${d.jenis_kelamin === 'Laki-laki' ? 'badge-l' : 'badge-p'}">${d.jenis_kelamin}</span></td>
+          <td>${d.no_hp}</td>
+          <td>${d.bidang}</td>
+          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${d.motivasi}">${d.motivasi}</td>
+          <td>${d.tanggal}</td>
+          <td><button class="btn-hapus" onclick="hapus(${d.id})">Hapus</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function filterData() {
+      const q = document.getElementById('search').value.toLowerCase();
+      renderTable(allData.filter(d => d.nama.toLowerCase().includes(q)));
+    }
+
+    function hapus(id) {
+      if (!confirm('Yakin ingin menghapus data ini?')) return;
+      allData = allData.filter(d => d.id !== id);
+      localStorage.setItem('osis_pendaftar', JSON.stringify(allData));
+      renderTable(allData);
+      updateStats(allData);
+    }
+
+    function exportExcel() {
+      if (allData.length === 0) { alert('Belum ada data untuk diekspor.'); return; }
+
+      const header = ['No', 'Nama', 'Kejuruan', 'Kelas', 'Jenis Kelamin', 'No. HP', 'Bidang', 'Motivasi', 'Tanggal Daftar'];
+      const rows = allData.map((d, i) => [
+        i + 1, d.nama, d.kejuruan, d.kelas, d.jenis_kelamin,
+        d.no_hp, d.bidang, d.motivasi, d.tanggal
+      ]);
+
+      // Buat konten CSV (bisa dibuka di Excel)
+      const csvContent = [header, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pendaftar_osis.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
