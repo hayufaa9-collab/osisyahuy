@@ -130,9 +130,8 @@
     async function loadData() {
       document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="empty">⏳ Memuat data...</td></tr>';
       try {
-        const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(APPS_SCRIPT_URL));
-        const json = await res.json();
-        allData = JSON.parse(json.contents);
+        const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
+        allData = await res.json();
         renderTable(allData);
         updateStats(allData);
       } catch (err) {
