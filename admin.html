@@ -130,9 +130,9 @@
     async function loadData() {
       document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="empty">⏳ Memuat data...</td></tr>';
       try {
-        // Pakai no-cors tidak bisa baca response, pakai proxy CORS publik
-        const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
-        allData = await res.json();
+        const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(APPS_SCRIPT_URL));
+        const json = await res.json();
+        allData = JSON.parse(json.contents);
         renderTable(allData);
         updateStats(allData);
       } catch (err) {
