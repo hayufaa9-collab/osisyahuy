@@ -120,7 +120,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8q1peLOVHhi_dNtsg57V4dlAty7ewb3oQ1H0P-GcpL8rmYm6AcfcEqT_ZGNgrVSS85g/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr3jpZuto_HRsTjxQM7h1dtOBhSSB5rZYIagYRWWcF29x1bpXNx0JADZ-7cvy4Kgap/exec';
     let allData = [];
 
     document.getElementById('tglHari').textContent = new Date().toLocaleDateString('id-ID', {
@@ -130,8 +130,17 @@
     async function loadData() {
       document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="empty">⏳ Memuat data...</td></tr>';
       try {
-        const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
-        allData = await res.json();
+        // Coba langsung dulu tanpa proxy
+        let res, data;
+        try {
+          res = await fetch(APPS_SCRIPT_URL);
+          data = await res.json();
+        } catch {
+          // Fallback ke proxy jika CORS error
+          res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
+          data = await res.json();
+        }
+        allData = data;
         renderTable(allData);
         updateStats(allData);
       } catch (err) {
