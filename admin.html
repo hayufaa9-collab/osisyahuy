@@ -137,7 +137,7 @@
         updateStats(allData);
       } catch (err) {
         document.getElementById('tableBody').innerHTML =
-          '<tr><td colspan="9" class="empty">❌ Gagal memuat data. Klik 🔄 Refresh untuk coba lagi.</td></tr>';
+          `<tr><td colspan="9" class="empty">❌ Error: ${err.message}. Klik 🔄 Refresh untuk coba lagi.</td></tr>`;
       }
     }
 
