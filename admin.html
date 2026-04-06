@@ -120,7 +120,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxm1YbjdMEC9HpCQNIM_bpCFT8PYanazi_FNLA8z3bOke8lfNRyVVYvVwlc5jKEvuyk/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr3jpZuto_HRsTjxQM7h1dtOBhSSB5rZYIagYRWWcF29x1bpXNx0JADZ-7cvy4Kgap/exec';
     let allData = [];
 
     document.getElementById('tglHari').textContent = new Date().toLocaleDateString('id-ID', {
@@ -131,8 +131,7 @@
       document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="empty">⏳ Memuat data...</td></tr>';
       try {
         const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
-        allData = await res.json();();
-        allData = JSON.parse(json.contents);
+        allData = await res.json();
         renderTable(allData);
         updateStats(allData);
       } catch (err) {
