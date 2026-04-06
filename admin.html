@@ -120,7 +120,7 @@
   </div>
 
   <script>
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr3jpZuto_HRsTjxQM7h1dtOBhSSB5rZYIagYRWWcF29x1bpXNx0JADZ-7cvy4Kgap/exec';
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzZYp1WmoR5s3QrMOiCe5T1Kge0rTMvjFimf4WrN2iULnOu3ZFefZhjbRMWSgqemaFz/exec';
     let allData = [];
 
     document.getElementById('tglHari').textContent = new Date().toLocaleDateString('id-ID', {
@@ -129,24 +129,35 @@
 
     async function loadData() {
       document.getElementById('tableBody').innerHTML = '<tr><td colspan="9" class="empty">⏳ Memuat data...</td></tr>';
-      try {
-        // Coba langsung dulu tanpa proxy
-        let res, data;
-        try {
-          res = await fetch(APPS_SCRIPT_URL);
-          data = await res.json();
-        } catch {
-          // Fallback ke proxy jika CORS error
-          res = await fetch('https://corsproxy.io/?' + encodeURIComponent(APPS_SCRIPT_URL));
-          data = await res.json();
-        }
-        allData = data;
+
+      // Pakai JSONP untuk bypass CORS
+      const callbackName = 'osisCallback_' + Date.now();
+      const script = document.createElement('script');
+
+      const timeout = setTimeout(() => {
+        document.getElementById('tableBody').innerHTML =
+          '<tr><td colspan="9" class="empty">❌ Timeout. Pastikan Apps Script sudah di-deploy dengan benar.</td></tr>';
+        delete window[callbackName];
+        document.body.removeChild(script);
+      }, 10000);
+
+      window[callbackName] = function(data) {
+        clearTimeout(timeout);
+        delete window[callbackName];
+        document.body.removeChild(script);
+        allData = Array.isArray(data) ? data : [];
         renderTable(allData);
         updateStats(allData);
-      } catch (err) {
+      };
+
+      script.src = APPS_SCRIPT_URL + '?callback=' + callbackName;
+      script.onerror = function() {
+        clearTimeout(timeout);
         document.getElementById('tableBody').innerHTML =
-          `<tr><td colspan="9" class="empty">❌ Error: ${err.message}. Klik 🔄 Refresh untuk coba lagi.</td></tr>`;
-      }
+          '<tr><td colspan="9" class="empty">❌ Gagal memuat. Cek URL Apps Script.</td></tr>';
+        delete window[callbackName];
+      };
+      document.body.appendChild(script);
     }
 
     function updateStats(data) {
