@@ -55,7 +55,11 @@
     }
 
     /* Desktop: tabel biasa */
-    .desktop-table { display: block; overflow-x: auto; }
+    .desktop-table {
+      display: block; overflow-x: auto;
+      cursor: grab; user-select: none;
+    }
+    .desktop-table.dragging { cursor: grabbing; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 700px; }
     thead { background: #f5f6fa; }
     th { padding: 12px 16px; text-align: left; color: #555; font-weight: 600; }
@@ -257,6 +261,24 @@
     }
 
     loadData();
+
+    // Drag scroll untuk tabel desktop
+    const tableWrap = document.querySelector('.desktop-table');
+    let isDown = false, startX, scrollLeft;
+    tableWrap.addEventListener('mousedown', e => {
+      isDown = true;
+      tableWrap.classList.add('dragging');
+      startX = e.pageX - tableWrap.offsetLeft;
+      scrollLeft = tableWrap.scrollLeft;
+    });
+    tableWrap.addEventListener('mouseleave', () => { isDown = false; tableWrap.classList.remove('dragging'); });
+    tableWrap.addEventListener('mouseup', () => { isDown = false; tableWrap.classList.remove('dragging'); });
+    tableWrap.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - tableWrap.offsetLeft;
+      tableWrap.scrollLeft = scrollLeft - (x - startX);
+    });
   </script>
 </body>
 </html>
